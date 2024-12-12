@@ -17,13 +17,15 @@ Tags List for Output Clarifications
 
 """
 
+# Player Instance (Required)
 player = Player("Player")
-# World Map Loader
+
+# World Map Loader (Required)
 map = WorldMap(interface, player)
 
-# Blocks & Resolutions
 spells = []
-# Helpful to print additional messages before returning whether entry was successful
+
+# Block
 def mana_lock():
     if "mana_break" in spells:
         interface.narrate("[ Ability Check ] With a bit of mana, the gate surrenders to your will and opens.")
@@ -31,6 +33,7 @@ def mana_lock():
     interface.narrate("[ Ability Check ] You try to open the gate, but it is locked. No physical lock exists.")
     return False
 
+# Custom Area Action
 def learn_mana_break_spell():
     if "mana_break" in spells:
         interface.narrate("[ Block ] You have already learned this spell!")
@@ -40,13 +43,13 @@ def learn_mana_break_spell():
         spells.append("mana_break")
 
 # Items
-
 magical_staff = Item("Magical Staff", "Used for casting spells.", "Within the ironwood, you find an engraved signature, saying \"G10\".")
 smoke_grenade = Item("Smoke Grenade", "Produces a cloud of smoke. May be useful in combat.")
 mystery_potion = Item("Mystery Potion", "Effects may vary. Drink at your own risk.", "Liquids aren't supposed to change colors, right?")
 mana_choke = Item("Mana Choke Spell Scroll", "Choke your opponents out using your mana.", "An offensive variant of mana break.")
 crown = Item("Monarch's Crown", "The fallen crown of Dem-0.", "The combination of gold and obsidian strikes a familiar sense of unfinished business.")
 
+# Item Action
 def drink_mystery_potion():
     if "mana_break" in spells:
         interface.narrate("[ Ability Check ] A reward for your patience. Your character gains a new spell.")
@@ -59,6 +62,7 @@ def drink_mystery_potion():
         player.update_player_state("physical_state", "strong")
     player.remove_item(mystery_potion)
 
+# Item Action
 def wear_crown():
     interface.narrate("[ Ending 1/2 ]")
     interface.narrate("As the crown rests on your head, the entire world around you starts to crumble.")
@@ -67,6 +71,7 @@ def wear_crown():
     interface.narrate("All hail the new monarch. You cannot escape Azi. Ever.")
     exit()
 
+# Item Action
 def break_crown():
     interface.narrate("[ Ending 2/2 ]")
     interface.narrate("As the crown shatters from your sheer force, the entire world around you starts to crumble.")
@@ -83,11 +88,13 @@ def break_crown():
 mystery_potion.add_item_action("Drink Mystery Potion", None, drink_mystery_potion)
 crown.add_item_action("Wear Crown", None, wear_crown)
 crown.add_item_action("Break Crown", None, break_crown)
+
+# Give the player some items initially.
 player.add_item(mystery_potion)
 player.add_item(magical_staff)
 
 
-# More Custom Area Actions
+# Another Custom Area Action
 def loot_dem0():
     interface.narrate("[ Description ] You rustle through the layered robes and armor of the body, then you decided that it wasn't worth the effort. So, you snatched the crown instead.")
     interface.narrate("[ Action ] You have acquired the crown. This is available in your inventory.")
@@ -99,20 +106,24 @@ portal = Area("Portal of Azi", "No one has ever managed to escape Azi before. It
 bridge = Area("Bridge", "The portal remains closed. It's too late for regrets.", "Faint hints of mana linger in the air. A stronger presence awaits you.")
 gates = Area("Gates of Dem-0", "An imposing gate blocking the entrance to the residence of the monarch of Azi.", "The gate is infused with a mana lock, which can only be undone with a certain spell.")
 domain = Area("Remnants of Dem-0", "The monarch of Azi, Dem-0, finally lies still on the pavement.", "It appears that you have defeated the monarch.", mana_lock)
+
+# Define this area as a dynamic area. This will use an AI feedback loop for gameplay.
 domain.init_DYNAMIC("Domain of Dem-0", "The monarch of Azi, Dem-0, awaits you in combat. Their sword invites you into the domain, as the gate closes behind you. Only one person can leave this domain alive.", "Mystery surrounds the monarch, almost as if the monarch is only a prototype.", "The monarch of Azi, Dem-0, must be killed in combat. End the scenario when the monarch, otherwise known as Dem-0 is dead.")
+
+# Add paths and actions to these defined areas.
 portal.create_path(bridge)
 bridge.create_2way_path(gates)
 gates.add_area_action("Learn Mana Break Spell", None, learn_mana_break_spell)
 gates.create_2way_path(domain)
 domain.add_area_action("Loot Dem-0's Corpse", None, loot_dem0)
 
-# Add areas.
+# Add areas to the map. The first area added to the map defines the starting area.
 map.add_area(portal)
 map.add_area(bridge)
 map.add_area(gates)
 map.add_area(domain)
 
-# Sample Gameplay Loop
+# Gameplay Loop (Required)
 map.start()
 while True:
     map.act()
